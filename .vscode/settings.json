@@ -1,0 +1,20 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/ken2/ros2_ws/install/ros_vlm/lib/python3.10/site-packages",
+        "/home/ken2/ros2_ws/install/ros-vlm/lib/python3.10/site-packages",
+        "/home/ken2/bot_ws/install/tb3_autonomy/local/lib/python3.10/dist-packages",
+        "/home/ken2/bot_ws/install/object_detection/lib/python3.10/site-packages",
+        "/home/ken2/bot_ws/install/line_following/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/ken2/ros2_ws/install/ros_vlm/lib/python3.10/site-packages",
+        "/home/ken2/ros2_ws/install/ros-vlm/lib/python3.10/site-packages",
+        "/home/ken2/bot_ws/install/tb3_autonomy/local/lib/python3.10/dist-packages",
+        "/home/ken2/bot_ws/install/object_detection/lib/python3.10/site-packages",
+        "/home/ken2/bot_ws/install/line_following/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}
