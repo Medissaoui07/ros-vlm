@@ -24,8 +24,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'cam_publisher = ros_vlm.cam:main',        # Points to ros_vlm/cam.py
-            'image_viewer = ros_vlm.image_viewer:main', # Points to ros_vlm/image_viewer.py
+            'cam_publisher = ros_vlm.cam:main',        
+            'image_viewer = ros_vlm.image_viewer:main', 
+            'vlm_node = ros_vlm.vlm_node:main',
         ],
     },
 )
