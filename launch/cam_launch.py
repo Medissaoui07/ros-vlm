@@ -15,6 +15,16 @@ def generate_launch_description():
             executable='image_viewer',
             name='image_viewer_node',
             output='screen'
+        ),
+        Node(
+            package='ros_vlm',
+            executable='vlm_node',
+            name='vlm_node',
+            output='screen',
+            parameters=[{'use_sim_time': False}],
+            remappings=[
+                ('/camera/image_raw', '/camera/image')
+            ]
         )
     ])
 
