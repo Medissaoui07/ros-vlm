@@ -27,6 +27,8 @@ setup(
             'cam_publisher = ros_vlm.cam:main',        
             'image_viewer = ros_vlm.image_viewer:main', 
             'vlm_node = ros_vlm.vlm_node:main',
+            'speech_to_text = ros_vlm.speech_to_text:main',
+            
         ],
     },
 )
