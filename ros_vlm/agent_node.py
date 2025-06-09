@@ -1,9 +1,11 @@
 import rclpy 
 from rclpy.node import Node 
 from std_msgs.msg import String
-from langchain_together import Together
-import os
+from langchain_together import ChatTogether
+from langchain.schema import HumanMessage , SystemMessage 
 import time 
+import os
+
 
 
 class AgentNode(Node): 
@@ -13,8 +15,8 @@ class AgentNode(Node):
 
 
         
-        self.llm = Together(
-            model="deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free",
+        self.llm = ChatTogether(
+            model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
             api_key=self.api_key,
             max_tokens=256,
             temperature=0.7,
@@ -44,15 +46,21 @@ class AgentNode(Node):
             if now - self.last_request_time < self.request_interval:
                 self.get_logger().info("Ignoring response due to rate limiting.")
                 return
+            self.last_request_time = now
             response = msg.data 
             self.get_logger().info(f"Received response from Vorker: {response}")
-            prompt = f"USER: {response}\nAGENT:"
-            self.get_logger().info(f"Prompt for LLM: {prompt}")
+            messages = [ 
+                SystemMessage(content="You are a helpful agent that processes responses from Vorker."),
+                HumanMessage(content=response)
+            ]
+            #prompt = response + "\n\n"  
+            #self.get_logger().info(f"Prompt for LLM: {prompt}")
             try:
-                llm_response = self.llm.invoke(prompt)
-                self.get_logger().info(f"LLM response: {llm_response}")
+                llm_response = self.llm.invoke(messages)
+                response_txt = llm_response.content 
+                self.get_logger().info(f"LLM response: {response_txt}")
                 agent_msg = String()
-                agent_msg.data = llm_response
+                agent_msg.data = response_txt
                 self.publisher.publish(agent_msg)
                 self.get_logger().info("Published agent response.")
             except Exception as e:
