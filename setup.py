@@ -28,6 +28,7 @@ setup(
             'image_viewer = ros_vlm.image_viewer:main', 
             'vlm_node = ros_vlm.vlm_node:main',
             'speech_to_text = ros_vlm.speech_to_text:main',
+            'agent_node = ros_vlm.agent_node:main',
             
         ],
     },
