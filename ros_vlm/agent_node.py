@@ -3,6 +3,7 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from langchain_together import ChatTogether
 from langchain.schema import HumanMessage , SystemMessage 
+from langchain.memory import ConversationBufferMemory
 import time 
 import os
 
@@ -21,6 +22,11 @@ class AgentNode(Node):
             max_tokens=256,
             temperature=0.7,
             
+        )
+
+        self.memory = ConversationBufferMemory(
+            memory_key="chat_history",
+            return_messages=True,
         )
             
         
@@ -48,9 +54,11 @@ class AgentNode(Node):
                 return
             self.last_request_time = now
             response = msg.data 
-            self.get_logger().info(f"Received response from Vorker: {response}")
+            chat_hist = self.memory.chat_memory.messages
+            #self.get_logger(cha).info(f"Received response from Vorker: {response}")
             messages = [ 
                 SystemMessage(content="You are a helpful agent that processes responses from Vorker."),
+                *chat_hist,   
                 HumanMessage(content=response)
             ]
             #prompt = response + "\n\n"  
@@ -58,6 +66,9 @@ class AgentNode(Node):
             try:
                 llm_response = self.llm.invoke(messages)
                 response_txt = llm_response.content 
+                self.memory.chat_memory.add_user_message(response)
+                self.memory.chat_memory.add_ai_message(response_txt)
+                
                 self.get_logger().info(f"LLM response: {response_txt}")
                 agent_msg = String()
                 agent_msg.data = response_txt
