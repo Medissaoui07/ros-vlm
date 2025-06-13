@@ -44,9 +44,7 @@ class AgentNode(Node):
         self.tools = [
             Tool(
                 name="vision_tool",
-                func=vision_tool, # Reference to your actual function from tools.py
-                # This description is CRUCIAL for the LLM to understand when to use the tool
-                # Make sure it implies it takes no direct user input, but fetches global vision.
+                func=vision_tool, 
                 description="Use this tool to get the most recent visual information available from the robot's perception. This tool takes no direct input; it will fetch the latest vision data directly."
             ),
         ]
@@ -56,7 +54,7 @@ class AgentNode(Node):
             agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
             verbose=True, # to see the agent's reasoning
             memory=self.memory,
-            handle_parsing_errors=True,  # Handle parsing errors gracefully
+            handle_parsing_errors=True,  
         )
 
         self.create_timer(1.0, self.process_requests)
@@ -90,7 +88,7 @@ class AgentNode(Node):
        
 
     def vision_callback(self, msg):   
-        set_global_vision_context(msg.data)  # Update the global vision context
+        set_global_vision_context(msg.data)  
         self.get_logger().info(f"Updated vision Context: {msg.data}") 
         
 
@@ -111,7 +109,7 @@ class AgentNode(Node):
         self._run_agent(user_input)
 
         self.last_request_time = current_time
-        self.current_interval = self.base_interval  # Reset the interval after successful processing
+        self.current_interval = self.base_interval  # # Update the global vision contextReset the interval after successful processing
     def _run_agent(self , user_input):
         self.get_logger().info(f"Running agent with input: {user_input}")
         try:
@@ -124,7 +122,7 @@ class AgentNode(Node):
         except Exception as e:
             self.get_logger().error(f"Error during agent processing: {e}")
             self.current_interval = min(self.current_interval * 2, self.max_interval)
-            agent_msg = String()
+            agent_msg = String()# Update the global vision context
             agent_msg.data = f"Error in agent processing. Retrying in {self.current_interval:.1f} seconds. Error: {e}"
             self.tts_publisher.publish(agent_msg)
 
