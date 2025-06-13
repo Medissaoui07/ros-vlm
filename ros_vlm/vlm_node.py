@@ -90,7 +90,7 @@ class VLMNode(Node):
 
 
 
-                self.get_logger().info(f"VLM Response: {vlm_response}")
+                #self.get_logger().info(f"VLM Response: {vlm_response}")
             except groq.GroqError as e:
                 self.get_logger().error(f"Groq API error: {e}")
 

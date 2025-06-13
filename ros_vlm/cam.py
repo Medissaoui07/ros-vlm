@@ -22,7 +22,7 @@ class CameraPublisherNode(Node):
             time.sleep(1.0)
             for _ in range(10):
                 _, _ = self.cap.read()
-            self.get_logger().info("Camera initialized and ready .")
+           # self.get_logger().info("Camera initialized and ready .")
             self.timer = self.create_timer(0.1, self.publish_image)
         else:
             self.get_logger().error("CameraPublisherNode will not publish due to camera initialization failure.")

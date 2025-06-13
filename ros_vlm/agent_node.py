@@ -2,10 +2,13 @@ import rclpy
 from rclpy.node import Node 
 from std_msgs.msg import String
 from langchain_together import ChatTogether
-from langchain.schema import HumanMessage , SystemMessage 
+from langchain.schema import HumanMessage, SystemMessage
 from langchain.memory import ConversationBufferMemory
-import time 
+from langchain.agents import Tool, AgentExecutor, initialize_agent, AgentType
+from ros_vlm.utils.prompt_loader import PromptLoader 
+from ros_vlm.utils.tools import vision_tool , set_global_vision_context
 import os
+import time 
 
 
 
@@ -14,6 +17,16 @@ class AgentNode(Node):
         super().__init__("agent_node")
         self.api_key = os.getenv("TOGETHER_API_KEY")
 
+        self.prompt_loader = PromptLoader()
+
+
+         # Rate limiting parameters
+        self.last_request_time = 0
+        self.base_interval = 20  # Base interval between requests
+        self.max_interval = 60   # Maximum interval
+        self.current_interval = self.base_interval
+        self.request_queue = []  # Queue for pending requests
+        
 
         
         self.llm = ChatTogether(
@@ -28,59 +41,92 @@ class AgentNode(Node):
             memory_key="chat_history",
             return_messages=True,
         )
-            
+        self.tools = [
+            Tool(
+                name="vision_tool",
+                func=vision_tool, # Reference to your actual function from tools.py
+                # This description is CRUCIAL for the LLM to understand when to use the tool
+                # Make sure it implies it takes no direct user input, but fetches global vision.
+                description="Use this tool to get the most recent visual information available from the robot's perception. This tool takes no direct input; it will fetch the latest vision data directly."
+            ),
+        ]
+        self.agent_chain = initialize_agent(
+            tools=self.tools,
+            llm=self.llm,
+            agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
+            verbose=True, # to see the agent's reasoning
+            memory=self.memory,
+            handle_parsing_errors=True,  # Handle parsing errors gracefully
+        )
+
+        self.create_timer(1.0, self.process_requests)
+
+
+
         
-        self.subscription= self.create_subscription(
+        self.txt_subscription= self.create_subscription(
             String, 
             "vorker_response", 
             self.response_callback, 
             10
 
         )
-        self.subscription
-        self.publisher = self.create_publisher(
+        
+
+        self.vision_subscription = self.create_subscription(
+            String, 
+            "vlm_response", 
+            self.vision_callback, 
+            10
+        )
+        self.tts_publisher = self.create_publisher(
             String, 
             "agent_response", 
             10
         )
+      
 
-        self.last_request_time = 0 
-        self.request_interval = 20 
+        
+       
 
-    def response_callback(self , msg) : 
-            now = time.time()
-            if now - self.last_request_time < self.request_interval:
-                self.get_logger().info("Ignoring response due to rate limiting.")
-                return
-            self.last_request_time = now
-            response = msg.data 
-            chat_hist = self.memory.chat_memory.messages
-            #self.get_logger(cha).info(f"Received response from Vorker: {response}")
-            messages = [ 
-                SystemMessage(content="You are a helpful agent that processes responses from Vorker."),
-                *chat_hist,   
-                HumanMessage(content=response)
-            ]
-            #prompt = response + "\n\n"  
-            #self.get_logger().info(f"Prompt for LLM: {prompt}")
-            try:
-                llm_response = self.llm.invoke(messages)
-                response_txt = llm_response.content 
-                self.memory.chat_memory.add_user_message(response)
-                self.memory.chat_memory.add_ai_message(response_txt)
-                
-                self.get_logger().info(f"LLM response: {response_txt}")
-                agent_msg = String()
-                agent_msg.data = response_txt
-                self.publisher.publish(agent_msg)
-                self.get_logger().info("Published agent response.")
-            except Exception as e:
-                self.get_logger().error(f"Error during LLM processing: {e}")
-                agent_msg = String()
-                agent_msg.data = "Error processing response."
-                self.publisher.publish(agent_msg)
-                self.get_logger().info("Published error response.")
+    def vision_callback(self, msg):   
+        set_global_vision_context(msg.data)  # Update the global vision context
+        self.get_logger().info(f"Updated vision Context: {msg.data}") 
+        
 
+    def response_callback(self, msg): 
+        self.request_queue.append(msg.data)
+        self.get_logger().info(f"Received response: {msg.data}")
+    
+    
+    def process_requests(self):
+        if not self.request_queue:
+            return
+
+        current_time = time.time()
+        if current_time - self.last_request_time < self.current_interval:
+            return
+
+        user_input = self.request_queue.pop(0)
+        self._run_agent(user_input)
+
+        self.last_request_time = current_time
+        self.current_interval = self.base_interval  # Reset the interval after successful processing
+    def _run_agent(self , user_input):
+        self.get_logger().info(f"Running agent with input: {user_input}")
+        try:
+            agent_response = self.agent_chain.run(
+                input=user_input)
+            self.get_logger().info(f"Agent response: {agent_response}")
+            response_msg = String()
+            response_msg.data = agent_response
+            self.tts_publisher.publish(response_msg)            
+        except Exception as e:
+            self.get_logger().error(f"Error during agent processing: {e}")
+            self.current_interval = min(self.current_interval * 2, self.max_interval)
+            agent_msg = String()
+            agent_msg.data = f"Error in agent processing. Retrying in {self.current_interval:.1f} seconds. Error: {e}"
+            self.tts_publisher.publish(agent_msg)
 
 def main(args=None): 
     rclpy.init(args=args)
