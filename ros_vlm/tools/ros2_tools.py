@@ -9,9 +9,7 @@ import subprocess
 import json
 
 
-# TODO 1: Implement list_topics
-# Hint: Use subprocess to run 'ros2 topic list' command
-# Return the output as a formatted string
+
 @tool
 def list_topics(filter_pattern: str = "") -> str:
     """
@@ -52,16 +50,30 @@ def list_nodes(filter_pattern: str = "") -> str:
     Returns:
         List of node names
     """
-    # YOUR CODE HERE
-    # 1. Run 'ros2 node list' using subprocess
-    # 2. Parse the output
-    # 3. Filter if pattern provided
-    # 4. Return formatted string
-    pass
+
+    try : 
+        result = subprocess.run(
+            ['ros2', 'node', 'list'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        nodes = result.stdout.strip().split('\n')
+
+        if filter_pattern:
+            nodes = [n for n in nodes if filter_pattern.lower() in n.lower()]
+
+        if not nodes or nodes == ['']:
+            return "No nodes found"
+
+        return f"Active nodes ({len(nodes)}):\n" + "\n".join(nodes)
+    except Exception as e : 
+        return f"Error listing nodes: {e}"
+
+   
 
 
-# TODO 3: Implement list_services
-# Hint: Use subprocess to run 'ros2 service list' command
+
 @tool
 def list_services(filter_pattern: str = "") -> str:
     """
@@ -71,8 +83,24 @@ def list_services(filter_pattern: str = "") -> str:
     Returns:
         List of service names
     """
-    # YOUR CODE HERE
-    pass
+    try:
+        result = subprocess.run(
+            ['ros2', 'service', 'list'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        services = result.stdout.strip().split('\n')
+
+        if filter_pattern:
+            services = [s for s in services if filter_pattern.lower() in s.lower()]
+
+        if not services or services == ['']:
+            return "No services found"
+
+        return f"Available services ({len(services)}):\n" + "\n".join(services)
+    except Exception as e:
+        return f"Error listing services: {e}"
 
 
 # TODO 4: Implement echo_topic
@@ -86,15 +114,19 @@ def echo_topic(topic_name: str) -> str:
     Returns:
         The message content as string
     """
-    # YOUR CODE HERE
-    # 1. Run 'ros2 topic echo <topic> --once' with timeout
-    # 2. Return the message content
-    # Hint: Use timeout=3 to avoid hanging
-    pass
+    try:
+        result = subprocess.run(
+            ['ros2', 'topic', 'echo', topic_name, '--once'],
+            capture_output=True,
+            text=True,
+            timeout=3
+        )
+        return result.stdout.strip()
+    except Exception as e:
+        return f"Error echoing topic {topic_name}: {e}"
 
 
-# TODO 5: Implement publish_message
-# Hint: Use 'ros2 topic pub <topic> <type> <data> --once'
+
 @tool  
 def publish_message(topic_name: str, message_type: str, message_data: str) -> str:
     """
@@ -110,11 +142,16 @@ def publish_message(topic_name: str, message_type: str, message_data: str) -> st
         publish_message('/cmd_vel', 'geometry_msgs/msg/Twist', 
                        '{linear: {x: 0.5}, angular: {z: 0.0}}')
     """
-    # YOUR CODE HERE
-    # 1. Construct the ros2 topic pub command
-    # 2. Run it with --once flag
-    # 3. Return success/failure message
-    pass
+    try:
+        result = subprocess.run(
+            ['ros2', 'topic', 'pub', topic_name, message_type, message_data, '--once'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        return f"Published message to {topic_name}: {result.stdout.strip()}"
+    except Exception as e:
+        return f"Error publishing message to {topic_name}: {e}"
 
 
 # BONUS TODO: Get topic info (message type, publishers, subscribers)
@@ -128,4 +165,14 @@ def get_topic_info(topic_name: str) -> str:
         Topic type, publishers, and subscribers
     """
     # Hint: Use 'ros2 topic info <topic> -v'
-    pass
+    try : 
+        result = subprocess.run(
+        ['ros2', 'topic', 'info', topic_name, '-v'],
+        capture_output=True,
+        text=True,
+        timeout=5
+    )
+        return result.stdout.strip()
+    except Exception as e :
+        return f"Error getting topic info for {topic_name}: {e}"
+    
