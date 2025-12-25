@@ -5,7 +5,10 @@ from .ros2_tools import (
     list_nodes, 
     list_services,
     echo_topic,
-    publish_message
+    publish_message,
+    get_topic_info,
+    call_service,
+    describe_message_type
 )
 
 __all__ = [
@@ -13,5 +16,8 @@ __all__ = [
     'list_nodes',
     'list_services', 
     'echo_topic',
-    'publish_message'
+    'publish_message',
+    'get_topic_info',
+    'call_service',
+    'describe_message_type'
 ]

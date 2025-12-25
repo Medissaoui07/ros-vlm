@@ -39,8 +39,7 @@ def list_topics(filter_pattern: str = "") -> str:
         return f"Error listing topics: {e}"
 
 
-# TODO 2: Implement list_nodes
-# Hint: Use subprocess to run 'ros2 node list' command
+
 @tool
 def list_nodes(filter_pattern: str = "") -> str:
     """
@@ -154,7 +153,6 @@ def publish_message(topic_name: str, message_type: str, message_data: str) -> st
         return f"Error publishing message to {topic_name}: {e}"
 
 
-# BONUS TODO: Get topic info (message type, publishers, subscribers)
 @tool
 def get_topic_info(topic_name: str) -> str:
     """
@@ -175,4 +173,58 @@ def get_topic_info(topic_name: str) -> str:
         return result.stdout.strip()
     except Exception as e :
         return f"Error getting topic info for {topic_name}: {e}"
+
+
+@tool
+def call_service(service_name: str, service_type: str, request_data: str = "{}") -> str:
+    """
+    Call a ROS2 service.
+    Args:
+        service_name: The service to call (e.g., '/spawn')
+        service_type: Service type (e.g., 'turtlesim/srv/Spawn')
+        request_data: YAML-formatted request data
+    Returns:
+        Service response or error
     
+    Example:
+        call_service('/spawn', 'turtlesim/srv/Spawn', '{x: 5, y: 5, name: turtle2}')
+    """
+    
+    try:
+        result = subprocess.run(
+            ['ros2', 'service', 'call', service_name, service_type, request_data],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        return result.stdout.strip()
+    except Exception as e:
+        return f"Error calling service {service_name}: {e}"
+    
+
+
+
+@tool
+def describe_message_type(message_type: str) -> str:
+    """
+    Show the structure of a ROS2 message/service type.
+    Args:
+        message_type: The type to describe (e.g., 'geometry_msgs/msg/Twist')
+    Returns:
+        Message field definitions
+    
+    Example:
+        describe_message_type('geometry_msgs/msg/Twist')
+        describe_message_type('std_srvs/srv/SetBool')
+    """
+    
+    try:
+        result = subprocess.run(
+            ['ros2', 'interface', 'show', message_type],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        return result.stdout.strip()
+    except Exception as e:
+        return f"Error describing message type {message_type}: {e}"

@@ -1,11 +1,10 @@
-"""Demo launch file - runs agent with turtlesim for testing."""
+"""MCP Agent launch file with turtlesim demo."""
 
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    # Turtlesim node for testing
     turtlesim = Node(
         package='turtlesim',
         executable='turtlesim_node',
@@ -13,12 +12,11 @@ def generate_launch_description():
         output='screen'
     )
     
-    # The ROS2 VLM agent
-    agent = Node(
+    mcp_agent = Node(
         package='ros_vlm',
-        executable='agent_node',
-        name='ros2_agent',
+        executable='mcp_agent',
+        name='mcp_agent',
         output='screen'
     )
     
-    return LaunchDescription([turtlesim, agent])
+    return LaunchDescription([turtlesim, mcp_agent])
